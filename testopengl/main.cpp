@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <iostream>
 #include <GL/glew.h>
-#include <GL/GL.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <cassert>
@@ -43,7 +42,7 @@ GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path)
     int InfoLogLength;
 
     // Компилируем Вершинный шейдер
-    printf("Компиляция шейдера: %s\n", vertex_file_path);
+    std::cout << "Компиляция шейдера : " << vertex_file_path << std::endl;
     char const* VertexSourcePointer = VertexShaderCode.c_str();
     glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
     glCompileShader(VertexShaderID);
@@ -52,13 +51,13 @@ GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path)
     glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
     glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
     if (InfoLogLength > 0) {
-        std::vector<char> VertexShaderErrorMessage(InfoLogLength + 1);
+        std::vector<char> VertexShaderErrorMessage((InfoLogLength + 1));
         glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
-        fprintf(stdout, "%s\n", &VertexShaderErrorMessage[0]);
+        std::cout << &VertexShaderErrorMessage[0] << std::endl;
     }
 
     // Компилируем Фрагментный шейдер
-    printf("Компиляция шейдера: %s\n", fragment_file_path);
+    std::cout << "Компиляция шейдера : " << fragment_file_path << std::endl;
     char const* FragmentSourcePointer = FragmentShaderCode.c_str();
     glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
     glCompileShader(FragmentShaderID);
@@ -69,11 +68,11 @@ GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path)
     if (InfoLogLength > 0) {
         std::vector<char> FragmentShaderErrorMessage(InfoLogLength + 1);
         glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
-        fprintf(stdout, "%s\n", &FragmentShaderErrorMessage[0]);
+        std::cout << &FragmentShaderErrorMessage[0] << std::endl;
     }
 
     // Создаем шейдерную программу и привязываем шейдеры к ней
-    fprintf(stdout, "Создаем шейдерную программу и привязываем шейдеры к ней\n");
+    std::cout << "Создаем шейдерную программу и привязываем шейдеры к ней" << std::endl;
     GLuint ProgramID = glCreateProgram();
     glAttachShader(ProgramID, VertexShaderID);
     glAttachShader(ProgramID, FragmentShaderID);
@@ -85,7 +84,7 @@ GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path)
     if (InfoLogLength > 0) {
         std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
         glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
-        fprintf(stdout, "%s\n", &ProgramErrorMessage[0]);
+        std::cout << &ProgramErrorMessage[0] << std::endl;
     }
 
     glDeleteShader(VertexShaderID);
@@ -106,10 +105,13 @@ int main() {
 	
 
 	glewExperimental = true;
-	if (glewInit() != GLEW_OK) {
+    //
+    int ui = glewInit();
+    assert(!ui);
+	/*if (glewInit() != GLEW_OK) {
 		std::cout << "terminate" << std::endl;
 		return -1;
-	}
+	}*/
 
 	GLuint VertexArrayID;
 	glGenVertexArrays(1, &VertexArrayID);
@@ -133,7 +135,7 @@ int main() {
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 
     GLuint programID = LoadShaders("SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader");
-
+    assert(programID);
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 	do{
         glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
