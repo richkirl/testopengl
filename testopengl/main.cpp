@@ -11,6 +11,8 @@
 #include <vector>
 #include <sstream>
 #include <fstream>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 using namespace glm;
 GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path) {
     GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
@@ -72,10 +74,15 @@ GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path)
     glDeleteShader(FragmentShaderID);
     return ProgramID;
 }
+//GLuint loadBMP_custom(const char* imagepath)
+//{
+//
+//}
 int main() {
     setlocale(LC_ALL, "Russian");
 	int er = glfwInit();
 	assert(er);
+
 	glfwWindowHint(GLFW_SAMPLES, 4);
 	GLFWwindow* window;
 	window = glfwCreateWindow(1024, 768, "Tutorial 01", NULL, NULL);
@@ -90,10 +97,10 @@ int main() {
 
 
     static const GLfloat g_vertex_buffer_data[] = {
-        -1.0f,-1.0f,-1.0f, // Треугольник 1 : начало
+       -1.0f,-1.0f,-1.0f, // Треугольник 1 : начало
        -1.0f,-1.0f, 1.0f,
        -1.0f, 1.0f, 1.0f, // Треугольник 1 : конец
-     1.0f, 1.0f,-1.0f, // Треугольник 2 : начало
+        1.0f, 1.0f,-1.0f, // Треугольник 2 : начало
         -1.0f,-1.0f,-1.0f,
         -1.0f, 1.0f,-1.0f, // Треугольник 2 : конец
         1.0f,-1.0f, 1.0f,
@@ -166,14 +173,63 @@ int main() {
         0.820f,  0.883f,  0.371f,
         0.982f,  0.099f,  0.879f
     };
+    static const GLfloat g_uv_buffer_data[] = {
+0.333866f, 1.0f-1.000000f,
+0.000000f, 1.0f-1.000000f,
+0.000000f, 1.0f-0.667266f,
+0.333866f, 1.0f-0.667266f,
+0.333866f, 1.0f-0.332734f,
+0.666134f, 1.0f-0.332734f,
+0.333866f, 1.0f-0.332734f,
+0.333866f, 1.0f-0.000000f,
+0.666134f, 1.0f-0.000000f,
+1.000000f, 1.0f-0.332734f,
+0.666134f, 1.0f-0.332734f,
+0.666134f, 1.0f-0.000000f,
+0.000000f, 1.0f-0.332734f,
+0.000000f, 1.0f-0.000000f,
+0.333866f, 1.0f-0.000000f,
+0.333866f, 1.0f-0.667266f,
+0.000000f, 1.0f-0.667266f,
+0.333866f, 1.0f-0.667266f,
+0.666134f, 1.0f-0.332734f,
+0.333866f, 1.0f-0.332734f,
+0.666134f, 1.0f-0.667266f,
+    };
 	GLuint vertexbuffer;
-	glGenBuffers(1, &vertexbuffer);
+    glGenVertexArrays(1, &vertexbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
     GLuint colorbuffer;
     glGenBuffers(1, &colorbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), g_color_buffer_data, GL_STATIC_DRAW);
+    GLuint uvbuffer;
+    glGenBuffers(1, &uvbuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, uvbuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(g_uv_buffer_data), g_uv_buffer_data, GL_STATIC_DRAW);
+
+    GLuint textureID;
+    int qwidth, height, cnt;
+    
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    unsigned char* qdata = stbi_load("sea1.bmp", &qwidth, &height, &cnt, 0);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, qwidth, height, 0, GL_RGB, GL_UNSIGNED_BYTE, qdata);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    stbi_image_free(qdata);
+    //return *qdata;
+
+    
+
+    
     GLuint programID = LoadShaders("SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader");
     assert(programID);
     // Проекционная матрица : 45&deg; поле обзора, 4:3 соотношение сторон, диапазон : 0.1 юнит <-> 100 юнитов
@@ -187,24 +243,107 @@ int main() {
      glm::mat4 Model = glm::mat4(1.0f);  // Индивидуально для каждой модели
     glm::mat4 MVP = Projection * View * Model; // Помните, что умножение матрицы производиться в обратном порядке
 
+
+    
+    
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 	do{
+
+        GLuint MatrixID = glGetUniformLocation(programID, "MVP");
+        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
         glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glUseProgram(programID);
-        GLuint MatrixID = glGetUniformLocation(programID, "MVP");
-        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        
 		glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-		glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,(void*)0);
+		glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE, 0,(GLvoid*)0);
         glEnableVertexAttribArray(1);
         glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
-        glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,(void*)0);
-		glDrawArrays(GL_TRIANGLES, 0, 12*3); 
+        glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,(GLvoid*)0);
+        glEnableVertexAttribArray(2);
+        glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,0, (GLvoid*)0);
+        glUseProgram(programID);
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glActiveTexture(GL_TEXTURE_2D);
+        
+        glUniform1i(glGetUniformLocation(programID, "sea1.bmp"), 0);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+		glDrawArrays(GL_TRIANGLES, 0,6*6); 
 		glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(2);
+
+        // позиция
+        glm::vec3 position = glm::vec3(0, 0, 5);
+        // горизонтальный угол
+        float horizontalAngle = 3.14f;
+        // вертикальный угол
+        float verticalAngle = 0.0f;
+        // поле обзора
+        float initialFoV = 45.0f;
+
+        float speed = 3.0f; // 3 units / second
+        float mouseSpeed = 0.005f;
+        double *xpos=0, *ypos=0;
+        glfwGetCursorPos(window,xpos, ypos);
+        //glfwSetCursorPos(window, 1024 / 2, 768 / 2);
+
+
+        // Направление
+        glm::vec3 direction(
+            cos(verticalAngle)* sin(horizontalAngle),
+            sin(verticalAngle),
+            cos(verticalAngle)* cos(horizontalAngle)
+        );
+        // Вектор, указывающий направление вправо от камеры
+        glm::vec3 right = glm::vec3(
+            sin(horizontalAngle - 3.14f / 2.0f),
+            0,
+            cos(horizontalAngle - 3.14f / 2.0f)
+        );
+
+        glm::vec3 up = glm::cross(right, direction);
+
+        // Проекционная матрица: Поле обзора = FoV, отношение сторон 4 к 3, плоскости отсечения 0.1 и 100 юнитов
+        glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(initialFoV), 4.0f / 3.0f, 0.1f, 100.0f);
+        // Матрица камеры
+        glm::mat4 ViewMatrix = glm::lookAt(
+            position,           // Позиция камеры
+            position + direction, // Направление камеры
+            up                  // Вектор "Вверх" камеры
+        );
+        double currentTime = glfwGetTime();
+        float deltaTime = float(currentTime);
+        float FoV = initialFoV - 5;
+
+
+
+        // Движение вперед
+        if (glfwGetKey(window,GLFW_KEY_UP) == GLFW_PRESS) {
+            position += direction * deltaTime * speed;
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        }
+        // Движение назад
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+            position -= direction * deltaTime * speed;
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        }
+        // Стрэйф вправо
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+            position += right * deltaTime * speed;
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        }
+        // Стрэйф влево
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+            position -= right * deltaTime * speed;
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        }
+        glm::mat4 ModelMatrix = glm::mat4(1.0);
+        glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	} while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);
