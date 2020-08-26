@@ -13,89 +13,12 @@
 #include <fstream>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include "testRender.hpp"
 using namespace glm;
-GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path) {
-    GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-    GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-    std::string VertexShaderCode;
-    std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
-    if (VertexShaderStream.is_open())
-    {
-        std::stringstream sstr;
-        sstr << VertexShaderStream.rdbuf();
-        VertexShaderCode = sstr.str();
-        VertexShaderStream.close();
-    }
-    std::string FragmentShaderCode;
-    std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
-    if (FragmentShaderStream.is_open()) {
-        std::stringstream sstr;
-        sstr << FragmentShaderStream.rdbuf();
-        FragmentShaderCode = sstr.str();
-        FragmentShaderStream.close();
-    }
-    GLint Result = GL_FALSE;
-    int InfoLogLength;
-    std::cout << "Компиляция шейдера : " << vertex_file_path << std::endl;
-    char const* VertexSourcePointer = VertexShaderCode.c_str();
-    glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
-    glCompileShader(VertexShaderID);
-    glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
-    glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-    if (InfoLogLength > 0) {
-        std::vector<char> VertexShaderErrorMessage(static_cast<__int64>(InfoLogLength) + 1);
-        glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
-        std::cout << &VertexShaderErrorMessage[0] << std::endl;
-    }
-    std::cout << "Компиляция шейдера : " << fragment_file_path << std::endl;
-    char const* FragmentSourcePointer = FragmentShaderCode.c_str();
-    glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
-    glCompileShader(FragmentShaderID);
-    glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
-    glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-    if (InfoLogLength > 0) {
-        std::vector<char> FragmentShaderErrorMessage(static_cast<__int64>(InfoLogLength) + 1);
-        glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
-        std::cout << &FragmentShaderErrorMessage[0] << std::endl;
-    }
-    std::cout << "Создаем шейдерную программу и привязываем шейдеры к ней" << std::endl;
-    GLuint ProgramID = glCreateProgram();
-    glAttachShader(ProgramID, VertexShaderID);
-    glAttachShader(ProgramID, FragmentShaderID);
-    glLinkProgram(ProgramID);
-    glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
-    glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-    if (InfoLogLength > 0) {
-        std::vector<char> ProgramErrorMessage(static_cast<__int64>(InfoLogLength) + 1);
-        glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
-        std::cout << &ProgramErrorMessage[0] << std::endl;
-    }
-    glDeleteShader(VertexShaderID);
-    glDeleteShader(FragmentShaderID);
-    return ProgramID;
-}
-//GLuint loadBMP_custom(const char* imagepath)
-//{
-//
-//}
 int main() {
     setlocale(LC_ALL, "Russian");
-	int er = glfwInit();
-	assert(er);
-
-	glfwWindowHint(GLFW_SAMPLES, 4);
-	GLFWwindow* window;
-	window = glfwCreateWindow(1024, 768, "Tutorial 01", NULL, NULL);
-	assert(window);
-	glfwMakeContextCurrent(window);
-	glewExperimental = true;
-    int ui = glewInit();
-    assert(!ui);
-	GLuint VertexArrayID;
-	glGenVertexArrays(1, &VertexArrayID);
-	glBindVertexArray(VertexArrayID);
-
-
+    testRender Objworker;
+    Objworker.initializegl();
     static const GLfloat g_vertex_buffer_data[] = {
        -1.0f,-1.0f,-1.0f, // Треугольник 1 : начало
        -1.0f,-1.0f, 1.0f,
@@ -134,7 +57,6 @@ int main() {
         -1.0f, 1.0f, 1.0f,
         1.0f,-1.0f, 1.0f
     };
-    // Один цвет для каждой вершины
     static const GLfloat g_color_buffer_data[] = {
         0.583f,  0.771f,  0.014f,
         0.609f,  0.115f,  0.436f,
@@ -196,60 +118,40 @@ int main() {
 0.333866f, 1.0f-0.332734f,
 0.666134f, 1.0f-0.667266f,
     };
-	GLuint vertexbuffer;
+    
+    GLuint vertexbuffer;
     glGenVertexArrays(1, &vertexbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), &(g_vertex_buffer_data), GL_STATIC_DRAW);
+        
     GLuint colorbuffer;
     glGenBuffers(1, &colorbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), g_color_buffer_data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), &(g_color_buffer_data), GL_STATIC_DRAW);
+         
     GLuint uvbuffer;
     glGenBuffers(1, &uvbuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, uvbuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(g_uv_buffer_data), g_uv_buffer_data, GL_STATIC_DRAW);
-
-    GLuint textureID;
-    int qwidth, height, cnt;
-    
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    unsigned char* qdata = stbi_load("sea1.bmp", &qwidth, &height, &cnt, 0);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, qwidth, height, 0, GL_RGB, GL_UNSIGNED_BYTE, qdata);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    stbi_image_free(qdata);
-    //return *qdata;
-
-    
-
-    
-    GLuint programID = LoadShaders("SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader");
-    assert(programID);
-    // Проекционная матрица : 45&deg; поле обзора, 4:3 соотношение сторон, диапазон : 0.1 юнит <-> 100 юнитов
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(g_uv_buffer_data), &(g_uv_buffer_data), GL_STATIC_DRAW);
+    const std::string path = "sea1.jpg";
+   
+    Objworker.LoadImage(path);
+    const std::string VertexShader = "SimpleVertexShader.vertexshader";
+    const std::string FragmentShader = "SimpleFragmentShader.fragmentshader";
+    Objworker.LoadShaders(VertexShader, FragmentShader);
+    assert(Objworker.ProgramID);
     glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
-    // Или, для ортокамеры
     glm::mat4 View = glm::lookAt(
-        glm::vec3(4, 3, 3), // Камера находится в мировых координатах (4,3,3)
-        glm::vec3(0, 0, 0), // И направлена в начало координат
-        glm::vec3(0, 1, 0)  // "Голова" находится сверху
+        glm::vec3(4, 3, 3), 
+        glm::vec3(0, 0, 0), 
+        glm::vec3(0, 1, 0)  
     );
-     glm::mat4 Model = glm::mat4(1.0f);  // Индивидуально для каждой модели
-    glm::mat4 MVP = Projection * View * Model; // Помните, что умножение матрицы производиться в обратном порядке
-
-
-    
-    
-	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+     glm::mat4 Model = glm::mat4(1.0f);  
+    glm::mat4 MVP = Projection * View * Model;
+	glfwSetInputMode(Objworker.window, GLFW_STICKY_KEYS, GL_TRUE);
 	do{
 
-        GLuint MatrixID = glGetUniformLocation(programID, "MVP");
+        GLuint MatrixID = glGetUniformLocation(Objworker.ProgramID, "MVP");
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
         glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
         glEnable(GL_DEPTH_TEST);
@@ -257,21 +159,21 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
 		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, *(&vertexbuffer));
 		glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE, 0,(GLvoid*)0);
         glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, *(&colorbuffer));
         glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,(GLvoid*)0);
         glEnableVertexAttribArray(2);
-        glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, *(&uvbuffer));
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,0, (GLvoid*)0);
-        glUseProgram(programID);
+        glUseProgram(Objworker.ProgramID);
         glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, textureID);
+        glBindTexture(GL_TEXTURE_2D, Objworker.textureID);
         glActiveTexture(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, Objworker.textureID);
+        glUniform1i(glGetUniformLocation(Objworker.ProgramID, "sea1.jpg"), 0);
         
-        glUniform1i(glGetUniformLocation(programID, "sea1.bmp"), 0);
-        glBindTexture(GL_TEXTURE_2D, textureID);
 		glDrawArrays(GL_TRIANGLES, 0,6*6); 
 		glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
@@ -289,7 +191,7 @@ int main() {
         float speed = 3.0f; // 3 units / second
         float mouseSpeed = 0.005f;
         double *xpos=0, *ypos=0;
-        glfwGetCursorPos(window,xpos, ypos);
+        //glfwGetCursorPos(window,xpos, ypos);
         //glfwSetCursorPos(window, 1024 / 2, 768 / 2);
 
 
@@ -323,28 +225,31 @@ int main() {
 
 
         // Движение вперед
-        if (glfwGetKey(window,GLFW_KEY_UP) == GLFW_PRESS) {
+        if (glfwGetKey(Objworker.window,GLFW_KEY_UP) == GLFW_PRESS) {
             position += direction * deltaTime * speed;
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
         // Движение назад
-        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        if (glfwGetKey(Objworker.window, GLFW_KEY_DOWN) == GLFW_PRESS) {
             position -= direction * deltaTime * speed;
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
         // Стрэйф вправо
-        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        if (glfwGetKey(Objworker.window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
             position += right * deltaTime * speed;
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
         // Стрэйф влево
-        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        if (glfwGetKey(Objworker.window, GLFW_KEY_LEFT) == GLFW_PRESS) {
             position -= right * deltaTime * speed;
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
         glm::mat4 ModelMatrix = glm::mat4(1.0);
         glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
-		glfwSwapBuffers(window);
+		glfwSwapBuffers(Objworker.window);
 		glfwPollEvents();
-	} while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);
+	} while (glfwGetKey(Objworker.window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(Objworker.window) == 0);
+    glfwTerminate();
+ 
+    return 0;
 }
