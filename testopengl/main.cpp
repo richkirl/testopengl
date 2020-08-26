@@ -2,7 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+//#include <glad/glad.h>
+//#
 #include <GL/glew.h>
+
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -11,6 +14,7 @@
 #include <vector>
 #include <sstream>
 #include <fstream>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "testRender.hpp"
@@ -119,6 +123,9 @@ int main() {
 0.666134f, 1.0f-0.667266f,
     };
     
+    //GLuint vertexbuffer=Objworker.CreateVertexBuf(g_vertex_buffer_data[0], vertexbuffer);
+    //vertexbuffer = 0; 
+   // Objworker.CreateVertexBuf(g_vertex_buffer_data[0]);
     GLuint vertexbuffer;
     glGenVertexArrays(1, &vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
@@ -149,7 +156,12 @@ int main() {
      glm::mat4 Model = glm::mat4(1.0f);  
     glm::mat4 MVP = Projection * View * Model;
 	glfwSetInputMode(Objworker.window, GLFW_STICKY_KEYS, GL_TRUE);
+    const double fpsLimit = 1.0 / 60.0;
+    double lastUpdateTime = 0;  // number of seconds since the last loop
+    double lastFrameTime = 0;   // number of seconds since the last frame
 	do{
+        double now = glfwGetTime();
+        double deltaTime = now - lastUpdateTime;
 
         GLuint MatrixID = glGetUniformLocation(Objworker.ProgramID, "MVP");
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
@@ -159,7 +171,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
 		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, *(&vertexbuffer));
+		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 		glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE, 0,(GLvoid*)0);
         glEnableVertexAttribArray(1);
         glBindBuffer(GL_ARRAY_BUFFER, *(&colorbuffer));
@@ -174,7 +186,7 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, Objworker.textureID);
         glUniform1i(glGetUniformLocation(Objworker.ProgramID, "sea1.jpg"), 0);
         
-		glDrawArrays(GL_TRIANGLES, 0,6*6); 
+		glDrawArrays(GL_TRIANGLES, 0,40); 
 		glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
@@ -218,38 +230,55 @@ int main() {
             position + direction, // Направление камеры
             up                  // Вектор "Вверх" камеры
         );
-        double currentTime = glfwGetTime();
-        float deltaTime = float(currentTime);
-        float FoV = initialFoV - 5;
+        //double currentTime = glfwGetTime();
+        //float deltaTime = float(currentTime);
+        //float FoV = initialFoV - 5;
 
 
 
         // Движение вперед
         if (glfwGetKey(Objworker.window,GLFW_KEY_UP) == GLFW_PRESS) {
-            position += direction * deltaTime * speed;
+            position += direction * glm::vec3(deltaTime) * speed;
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
         // Движение назад
         if (glfwGetKey(Objworker.window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-            position -= direction * deltaTime * speed;
+            position -= direction * glm::vec3(deltaTime) * speed;
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
         // Стрэйф вправо
         if (glfwGetKey(Objworker.window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-            position += right * deltaTime * speed;
+            position += right * glm::vec3(deltaTime) * speed;
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
         // Стрэйф влево
         if (glfwGetKey(Objworker.window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-            position -= right * deltaTime * speed;
+            position -= right * glm::vec3(deltaTime) * speed;
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
         glm::mat4 ModelMatrix = glm::mat4(1.0);
         glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 		glfwSwapBuffers(Objworker.window);
 		glfwPollEvents();
+        if ((now - lastFrameTime) >= fpsLimit)
+        {
+            // draw your frame here
+
+            glfwSwapBuffers(Objworker.window);
+
+            // only set lastFrameTime when you actually draw something
+            lastFrameTime = now;
+        }
+
+        // set lastUpdateTime every iteration
+        lastUpdateTime = now;
+        glEnable(GL_CULL_FACE);
 	} while (glfwGetKey(Objworker.window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(Objworker.window) == 0);
     glfwTerminate();
+    glDeleteBuffers(1, &vertexbuffer);
+    glDeleteBuffers(1, &uvbuffer);
+    glDeleteBuffers(1, &colorbuffer);
+
  
     return 0;
 }

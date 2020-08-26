@@ -104,7 +104,7 @@ void testRender::resizeGL(int, int)
 
 void testRender::paintGL(int x,int y)
 {
-    this->window = glfwCreateWindow(x, y, "Tutorial 01", NULL, NULL);
+    this->window = glfwCreateWindow(x, y, "CubeTexturing", NULL, NULL);
     assert(this->window);
 }
 
@@ -120,33 +120,33 @@ void testRender::event()
 {
 }
 
-GLuint testRender::CreateVertexBuf(static const GLfloat& g_vertex_buffer_data, GLuint* vertexbuf)
+void testRender::CreateVertexBuf(static const GLfloat& g_vertex_buffer_data)
 {
-    //GLuint* vert = &vertexbuffer;
-    glGenVertexArrays(1, vertexbuf);
-    glBindBuffer(GL_ARRAY_BUFFER, *vertexbuf);
+    //GLuint vertexbuffer;
+    glGenVertexArrays(1, &this->vrtbuf);
+    glBindBuffer(GL_ARRAY_BUFFER, this->vrtbuf);
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), &(g_vertex_buffer_data), GL_STATIC_DRAW);
-    return *vertexbuf;
+    //return vertexbuffer;
 }
 
-GLuint testRender::CreateColorBuf(static const GLfloat& g_color_buffer_data, GLuint* clrbuf)
+void testRender::CreateColorBuf(static const GLfloat& g_color_buffer_data)
 {
     //GLuint colorbuffer;
     //GLuint* clrbf = &colorbuffer;
-    glGenBuffers(1, clrbuf);
-    glBindBuffer(GL_ARRAY_BUFFER, *clrbuf);
+    glGenBuffers(1, &this->clrbuf);
+    glBindBuffer(GL_ARRAY_BUFFER, this->clrbuf);
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), &(g_color_buffer_data), GL_STATIC_DRAW);
-    return *clrbuf;
+   // return *clrbuf;
 }
 
-GLuint testRender::CreateUVBuf(static const GLfloat& g_uv_buffer_data, GLuint* uvbufr)
+void testRender::CreateUVBuf(static const GLfloat& g_uv_buffer_data)
 {
     //GLuint uvbuffer;
     //GLuint* uvbfr = &uvbuffer;
-    glGenBuffers(1, uvbufr);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *uvbufr);
+    glGenBuffers(1, &this->uvbufr);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->uvbufr);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(g_uv_buffer_data), &(g_uv_buffer_data), GL_STATIC_DRAW);
-    return *uvbufr;
+    //return *uvbufr;
 }
 
 void testRender::_processing()

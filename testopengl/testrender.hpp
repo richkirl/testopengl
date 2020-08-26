@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include <GL/glew.h>
+#include <gl/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -27,21 +27,25 @@ public:
 	void update();
 	void timer();
 	void event();
-	GLuint CreateVertexBuf(static const GLfloat& g_vertex_buffer_data,GLuint* vertexbuf);
-	GLuint CreateColorBuf(static const GLfloat& g_color_buffer_data,GLuint* clrbuf);
-	GLuint CreateUVBuf(static const GLfloat& g_uv_buffer_data,GLuint* uvbufr);
+	void CreateVertexBuf(static const GLfloat& g_vertex_buffer_data);
+	void CreateColorBuf(static const GLfloat& g_color_buffer_data);
+	void CreateUVBuf(static const GLfloat& g_uv_buffer_data);
 	GLFWwindow* window;
 	unsigned char* qdata;
 	GLuint ProgramID;
 	GLuint textureID;
+	GLuint vrtbuf;
+	GLuint clrbuf;
+	GLuint uvbufr;
+
+	GLuint VertexShaderID;
+	GLuint FragmentShaderID;
 private:
 	void _processing();
 	void _draw();
 
 
 
-	GLuint VertexShaderID ;
-	GLuint FragmentShaderID;
 	std::string VertexShaderCode;
 	std::string FragmentShaderCode;
 	std::ifstream VertexShaderStream;
